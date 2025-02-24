@@ -5,6 +5,20 @@
 
 #include "queue.h"
 
+/* a helper function to print the value of the given list_head */
+void q_print_entry(const char *prefix, struct list_head *head)
+{
+    if (!head)
+        return;
+
+    const element_t *e = list_entry(head, element_t, list);
+
+    if (prefix)
+        printf("%s, %s\n", prefix, e->value);
+    else
+        printf("%s\n", e->value);
+}
+
 /* Notice: sometimes, Cppcheck would find the potential NULL pointer bugs,
  * but some of them cannot occur. You can suppress them by adding the
  * following line.
@@ -125,6 +139,19 @@ int q_size(struct list_head *head)
 bool q_delete_mid(struct list_head *head)
 {
     // https://leetcode.com/problems/delete-the-middle-node-of-a-linked-list/
+    if (!head || list_empty(head))
+        return false;
+
+    struct list_head *fast = head->next, *slow = head->next;
+    while (fast && fast->next && fast->next->next && fast->next != head &&
+           fast->next->next != head) {
+        fast = fast->next->next;
+        slow = slow->next;
+    }
+
+    list_del(slow);
+    q_release_element(list_entry(slow, element_t, list));
+
     return true;
 }
 
