@@ -85,4 +85,7 @@ distclean: clean
 	-rm -f .cmd_history
 	-rm -rf .out
 
+format:
+	clang-format -i *.[ch]
+
 -include $(deps)
