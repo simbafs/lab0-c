@@ -5,7 +5,7 @@
 
 #include "queue.h"
 
-char *valueOf(struct list_head *node)
+const char *valueOf(struct list_head *node)
 {
     const element_t *e = list_entry(node, element_t, list);
     if (!e || !e->value)
@@ -235,6 +235,33 @@ bool q_delete_dup(struct list_head *head)
     return true;
 }
 
+// q_swap_two swap two element with each other
+void q_swap_two(struct list_head *a, struct list_head *b)
+{
+    if (!a || !b || a == b)
+        return;
+
+    /* q_print_entry("a", a); */
+    /* q_print_entry("b", b); */
+
+    // TODO: use indirect pointers to combine the following two cases
+    if (a->next == b) {
+        list_del(a);
+        list_add(a, b);
+    } else if (b->next == a) {
+        list_del(b);
+        list_add(b, a);
+    } else {
+        struct list_head *a_prev = a->prev, *b_prev = b->prev;
+
+        list_del(a);
+        list_del(b);
+
+        list_add(a, b_prev);
+        list_add(b, a_prev);
+    }
+}
+
 /* Swap every two adjacent nodes */
 void q_swap(struct list_head *head)
 {
@@ -243,18 +270,11 @@ void q_swap(struct list_head *head)
         return;
 
     struct list_head *curr = head->next, *next = head->next->next;
-    //    cp c n nn
-    // => cp n c nn
     while (curr != head && next != head) {
         /* q_print_entry("curr", curr); */
         /* q_print_entry("next", next); */
 
-        curr->prev->next = next;
-        next->next->prev = curr;
-        curr->next = next->next;
-        next->prev = curr->prev;
-        curr->prev = next;
-        next->next = curr;
+        q_swap_two(curr, next);
 
         /* q_print_queue(head); */
 
