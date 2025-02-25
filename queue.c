@@ -311,31 +311,37 @@ void q_reverseK(struct list_head *head, int k)
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
 }
 
-int q_compare(struct list_head *a, struct list_head *b, bool descend)
-{
-    int cmp = strcmp(valueOf(a), valueOf(b));
-    return descend ? -cmp : cmp;
-}
-
 /* Sort elements of queue in ascending/descending order */
 void q_sort(struct list_head *head, bool descend)
 {
-    // bubble sort
-    // TODO: use other sort algorighm
-    struct list_head *i, *j, *tmp;
-    for (i = head->next; i != head; i = i->next) {
-        for (j = i->next; j != head; j = j->next) {
-            /* printf("compare %s %s\n", valueOf(i), valueOf(j)); */
-            if (q_compare(i, j, descend) > 0) {
-                /* printf("swap    %s %s\n", valueOf(i), valueOf(j)); */
-                q_swap_two(i, j);
-                /* q_print_queue(head); */
-                tmp = i;
-                i = j;
-                j = tmp;
-            }
-        }
+    struct list_head list_less, list_greater;
+    element_t *pivot;
+    element_t *item = NULL, *is = NULL;
+
+    if (list_empty(head) || list_is_singular(head))
+        return;
+
+    INIT_LIST_HEAD(&list_less);
+    INIT_LIST_HEAD(&list_greater);
+
+    pivot = list_first_entry(head, element_t, list);
+    list_del(&pivot->list);
+
+    list_for_each_entry_safe (item, is, head, list) {
+        int cmp;
+        cmp = strcmp(item->value, pivot->value);
+        if (descend ? -cmp : cmp < 0)
+            list_move_tail(&item->list, &list_less);
+        else
+            list_move_tail(&item->list, &list_greater);
     }
+
+    q_sort(&list_less, descend);
+    q_sort(&list_greater, descend);
+
+    list_add(&pivot->list, head);
+    list_splice(&list_less, head);
+    list_splice_tail(&list_greater, head);
 }
 
 /* Remove every node which has a node with a strictly less value anywhere to
