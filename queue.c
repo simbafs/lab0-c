@@ -246,18 +246,12 @@ void q_swap_two(struct list_head *a, struct list_head *b)
     if (!a || !b || a == b)
         return;
 
-    /* printf("swap %s %s\n", valueOf(a), valueOf(b)); */
+    if (a->next == b || b->next == a) {
+        struct list_head *first = (a->next == b) ? a : b;
+        struct list_head *second = (a->next == b) ? b : a;
 
-    /* q_print_entry("a", a); */
-    /* q_print_entry("b", b); */
-
-    // TODO: use indirect pointers to combine the following two cases
-    if (a->next == b) {
-        list_del(a);
-        list_add(a, b);
-    } else if (b->next == a) {
-        list_del(b);
-        list_add(b, a);
+        list_del(first);
+        list_add(first, second);
     } else {
         struct list_head *a_prev = a->prev, *b_prev = b->prev;
 
