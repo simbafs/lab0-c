@@ -271,17 +271,16 @@ void q_swap(struct list_head *head)
     if (!head || list_empty(head))
         return;
 
-    struct list_head *curr = head->next, *next = head->next->next;
-    while (curr != head && next != head) {
+    struct list_head *curr = head->next;
+    while (curr != head && curr->next != head) {
         /* q_print_entry("curr", curr); */
         /* q_print_entry("next", next); */
 
-        q_swap_two(curr, next);
+        q_swap_two(curr, curr->next);
 
         /* q_print_queue(head); */
 
         curr = curr->next;
-        next = curr->next;
     }
     /* q_print_queue(head); */
 }
