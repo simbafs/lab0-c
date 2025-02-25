@@ -35,9 +35,22 @@ void q_print_queue(struct list_head *head)
         printf("%s ", valueOf(curr));
         curr = curr->next;
     } while (curr && curr != head);
-
     printf("\n");
+
+    // check if the doublely circular linked list is correct
+    int flag = 1;
+    curr = head->next;
+    while (curr != head) {
+        if (curr->prev->next != curr || curr->next->prev != curr) {
+            printf("%s is wrong\n", valueOf(curr));
+            flag = 0;
+        }
+        curr = curr->next;
+    }
+    if (flag)
+        printf("the linked list is correct\n");
 }
+
 
 #define hr() printf("-----\n")
 
@@ -226,6 +239,29 @@ bool q_delete_dup(struct list_head *head)
 void q_swap(struct list_head *head)
 {
     // https://leetcode.com/problems/swap-nodes-in-pairs/
+    if (!head || list_empty(head))
+        return;
+
+    struct list_head *curr = head->next, *next = head->next->next;
+    //    cp c n nn
+    // => cp n c nn
+    while (curr != head && next != head) {
+        /* q_print_entry("curr", curr); */
+        /* q_print_entry("next", next); */
+
+        curr->prev->next = next;
+        next->next->prev = curr;
+        curr->next = next->next;
+        next->prev = curr->prev;
+        curr->prev = next;
+        next->next = curr;
+
+        /* q_print_queue(head); */
+
+        curr = curr->next;
+        next = curr->next;
+    }
+    /* q_print_queue(head); */
 }
 
 /* Reverse elements in queue */

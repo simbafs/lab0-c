@@ -1,6 +1,8 @@
 new 
-ih a
-ih b
+ih e
+ih d
 ih c
-dedup
+ih b
+ih a
+swap
 free
