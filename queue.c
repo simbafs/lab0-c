@@ -5,24 +5,28 @@
 
 #include "queue.h"
 
-const char *valueOf(struct list_head *node)
+const char *value_of(struct list_head *head, struct list_head *node)
 {
+    if (node == head)
+        return "head";
     const element_t *e = list_entry(node, element_t, list);
-    if (!e || !e->value)
-        return "";
     return e->value;
 }
 
 /* a helper function to print the value of the given list_head */
-void q_print_entry(const char *prefix, struct list_head *head)
+void q_print_entry(struct list_head *head,
+                   const char *prefix,
+                   struct list_head *node)
 {
     if (!head)
         return;
 
+    const char *value = value_of(head, node);
+
     if (prefix)
-        printf("%s: %s\n", prefix, valueOf(head));
+        printf("%s: %s\n", prefix, value);
     else
-        printf("%s\n", valueOf(head));
+        printf("%s\n", value);
 }
 
 void q_print_queue(struct list_head *head)
@@ -32,7 +36,7 @@ void q_print_queue(struct list_head *head)
 
     struct list_head *curr = head->next;
     do {
-        printf("%s ", valueOf(curr));
+        printf("%s ", value_of(head, curr));
         curr = curr->next;
     } while (curr && curr != head);
     printf("\n");
@@ -42,7 +46,7 @@ void q_print_queue(struct list_head *head)
     curr = head->next;
     while (curr != head) {
         if (curr->prev->next != curr || curr->next->prev != curr) {
-            printf("%s is wrong\n", valueOf(curr));
+            printf("%s is wrong\n", value_of(head, curr));
             flag = 0;
         }
         curr = curr->next;
@@ -205,12 +209,13 @@ bool q_delete_dup(struct list_head *head)
     while (curr->next != head) {
         /* q_print_entry("curr", curr); */
         /* printf("! %s %s\n", valueOf(curr), valueOf(curr->next)); */
-        if (strcmp(valueOf(curr), valueOf(curr->next)) == 0) {
+        if (strcmp(value_of(head, curr), value_of(head, curr->next)) == 0) {
             element_t *e = list_entry(curr, element_t, list);
             curr = curr->next;
             struct list_head *next = NULL;
 
-            while (curr != head && strcmp(valueOf(curr), e->value) == 0) {
+            while (curr != head &&
+                   strcmp(value_of(head, curr), e->value) == 0) {
                 /* q_print_queue(head); */
                 /* q_print_entry("\tcurr", curr); */
                 /* printf("\tnext: %p\n", curr->next); */
