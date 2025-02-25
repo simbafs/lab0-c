@@ -241,6 +241,8 @@ void q_swap_two(struct list_head *a, struct list_head *b)
     if (!a || !b || a == b)
         return;
 
+    /* printf("swap %s %s\n", valueOf(a), valueOf(b)); */
+
     /* q_print_entry("a", a); */
     /* q_print_entry("b", b); */
 
@@ -285,7 +287,23 @@ void q_swap(struct list_head *head)
 }
 
 /* Reverse elements in queue */
-void q_reverse(struct list_head *head) {}
+void q_reverse(struct list_head *head)
+{
+    if (!head || list_empty(head))
+        return;
+
+    struct list_head *front = head->next, *rear = head->prev, *tmp;
+
+    while (front != rear && front->prev != rear) {
+        q_swap_two(front, rear);
+        /* printf("front: %s, rear: %s\n", valueOf(front), valueOf(rear)); */
+        /* q_print_queue(head); */
+        tmp = front->prev;
+        front = rear->next;
+        rear = tmp;
+        /* printf("front: %s, rear: %s\n", valueOf(front), valueOf(rear)); */
+    }
+}
 
 /* Reverse the nodes of the list k at a time */
 void q_reverseK(struct list_head *head, int k)

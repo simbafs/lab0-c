@@ -1,10 +1,9 @@
 new 
-ih b
 ih a
-ih d
+ih b
 ih c
+ih d
 ih e
-sort
-option descend 1
-sort
+ih f
+reverse
 free
