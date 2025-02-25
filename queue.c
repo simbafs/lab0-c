@@ -5,19 +5,41 @@
 
 #include "queue.h"
 
+char *valueOf(struct list_head *node)
+{
+    const element_t *e = list_entry(node, element_t, list);
+    if (!e || !e->value)
+        return "";
+    return e->value;
+}
+
 /* a helper function to print the value of the given list_head */
 void q_print_entry(const char *prefix, struct list_head *head)
 {
     if (!head)
         return;
 
-    const element_t *e = list_entry(head, element_t, list);
-
     if (prefix)
-        printf("%s, %s\n", prefix, e->value);
+        printf("%s: %s\n", prefix, valueOf(head));
     else
-        printf("%s\n", e->value);
+        printf("%s\n", valueOf(head));
 }
+
+void q_print_queue(struct list_head *head)
+{
+    if (!head)
+        return;
+
+    struct list_head *curr = head->next;
+    do {
+        printf("%s ", valueOf(curr));
+        curr = curr->next;
+    } while (curr && curr != head);
+
+    printf("\n");
+}
+
+#define hr() printf("-----\n")
 
 /* Notice: sometimes, Cppcheck would find the potential NULL pointer bugs,
  * but some of them cannot occur. You can suppress them by adding the
@@ -159,6 +181,44 @@ bool q_delete_mid(struct list_head *head)
 bool q_delete_dup(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/
+    // NOTE: assume that every element are sort in the linked list
+    /* q_print_queue(head); */
+
+    if (!head || list_empty(head))
+        return false;
+
+    struct list_head *curr = head->next;
+
+    while (curr->next != head) {
+        /* q_print_entry("curr", curr); */
+        /* printf("! %s %s\n", valueOf(curr), valueOf(curr->next)); */
+        if (strcmp(valueOf(curr), valueOf(curr->next)) == 0) {
+            element_t *e = list_entry(curr, element_t, list);
+            curr = curr->next;
+            struct list_head *next = NULL;
+
+            while (curr != head && strcmp(valueOf(curr), e->value) == 0) {
+                /* q_print_queue(head); */
+                /* q_print_entry("\tcurr", curr); */
+                /* printf("\tnext: %p\n", curr->next); */
+                next = curr->next;
+                list_del(curr);
+                q_release_element(list_entry(curr, element_t, list));
+                curr = next;
+            }
+
+
+            list_del(&e->list);
+            q_release_element(e);
+            /* printf("after delete: "); */
+            /* q_print_queue(head); */
+        } else {
+            /* printf("move to next\n"); */
+            curr = curr->next;
+        }
+        /* printf("is head: %s\n", curr == head ? "true" : "false"); */
+    }
+
     return true;
 }
 
