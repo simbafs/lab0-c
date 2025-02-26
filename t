@@ -1,11 +1,11 @@
 new 
-ih j
-ih g
-ih f
-ih e
-ih d
-ih c
-ih b
-ih a
-reverseK 3
+ih 5
+ih 7
+ih 3
+ih 2
+ih 1
+ih 8
+ih 4
+ih 6
+descend
 free

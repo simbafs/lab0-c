@@ -404,20 +404,56 @@ void q_sort(struct list_head *head, bool descend)
     list_splice_tail(&list_greater, head);
 }
 
+/**
+ * q_release_element() - Common part of q_ascend and q_descend
+ * @head: header of queue
+ * @ascend: in ascending or descending order
+ *
+ * @return: the number of elements in queue after performing operation
+ */
+int q_ascend_descend(struct list_head *head, bool ascend)
+{
+    if (!head || list_empty(head))
+        return 0;
+    if (list_is_singular(head)) {
+        return 1;
+    }
+
+    struct list_head *curr = head->prev;
+    int len = 0;
+    /* because there are at least one element, so max must not be NULL */
+    const char *max = value_of(head, curr);
+
+    while (curr != head) {
+        int cmp = strcmp(max, value_of(head, curr));
+        if (ascend ? cmp >= 0 : cmp <= 0) {
+            max = value_of(head, curr);
+            len++;
+            curr = curr->prev;
+        } else {
+            struct list_head *tmp = curr->prev;
+            list_del(curr);
+            q_release_element(list_entry(curr, element_t, list));
+            curr = tmp;
+        }
+    }
+    return len;
+}
+
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
 int q_ascend(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    return q_ascend_descend(head, true);
 }
 
-/* Remove every node which has a node with a strictly greater value anywhere to
- * the right side of it */
+/* Remove every node which has a node with a strictly greater value anywhere
+ * to the right side of it */
 int q_descend(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    return q_ascend_descend(head, false);
 }
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
