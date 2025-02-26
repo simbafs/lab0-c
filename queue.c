@@ -303,10 +303,72 @@ void q_reverse(struct list_head *head)
     }
 }
 
+/**
+ * list_next_k() - Check if there are at least k more elements in the list
+ * @head: pointer to the head of the linked list
+ * @curr: pointer to store the last element of the k elements
+ * @k: number of elements to check for availability
+ *
+ * This function returns true if there are at least k more elements in the
+ * linked list without reaching the end. Otherwise, it returns false.
+ * If successful, @currr is updated to point to the last element among
+ * the k elements.
+ */
+bool list_next_k(struct list_head *head, struct list_head **curr, int k)
+{
+    if (!head || list_empty(head) || !*curr || k <= 0)
+        return false;
+
+    struct list_head *tmp = *curr;
+    for (; k > 0; k--) {
+        if (tmp->next == head)
+            return false;
+        tmp = tmp->next;
+    }
+    *curr = tmp;
+
+    return true;
+}
+
 /* Reverse the nodes of the list k at a time */
 void q_reverseK(struct list_head *head, int k)
 {
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
+    if (!head || list_empty(head) || k <= 1)
+        return;
+
+    if (k == 2) {
+        q_reverse(head);
+        return;
+    }
+
+    struct list_head *front = head->next, *rear = head, *tmp;
+    if (!list_next_k(head, &rear, k))
+        return;
+
+    while (true) {
+        /* printf("front: %s, rear: %s\n", value_of(head, front), */
+        /*        value_of(head, rear)); */
+        while (front != rear && front->prev != rear) {
+            q_swap_two(front, rear);
+            tmp = front->prev;
+            front = rear->next;
+            rear = tmp;
+        }
+        /* q_print_queue(head); */
+        /* printf("\tfront: %s, rear: %s\n", value_of(head, front), */
+        /*        value_of(head, rear)); */
+
+        if (!list_next_k(head, &front, k - 1)) {
+            /* printf("1\n"); */
+            break;
+        }
+        rear = front;
+        if (!list_next_k(head, &rear, k - 1)) {
+            /* printf("1\n"); */
+            break;
+        }
+    }
 }
 
 /* Sort elements of queue in ascending/descending order */
