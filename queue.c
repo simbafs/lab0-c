@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,12 +6,17 @@
 
 #include "queue.h"
 
-const char *value_of(struct list_head *head, struct list_head *node)
+const char *element_value_of(struct list_head *head, struct list_head *node)
 {
     if (node == head)
         return "head";
     const element_t *e = list_entry(node, element_t, list);
     return e->value;
+}
+
+int queue_id_of(struct list_head *node)
+{
+    return list_entry(node, queue_contex_t, chain)->id;
 }
 
 /* a helper function to print the value of the given list_head */
@@ -21,7 +27,7 @@ void q_print_entry(struct list_head *head,
     if (!head)
         return;
 
-    const char *value = value_of(head, node);
+    const char *value = element_value_of(head, node);
 
     if (prefix)
         printf("%s: %s\n", prefix, value);
@@ -36,7 +42,7 @@ void q_print_queue(struct list_head *head)
 
     struct list_head *curr = head->next;
     do {
-        printf("%s ", value_of(head, curr));
+        printf("%s ", element_value_of(head, curr));
         curr = curr->next;
     } while (curr && curr != head);
     printf("\n");
@@ -46,7 +52,7 @@ void q_print_queue(struct list_head *head)
     curr = head->next;
     while (curr != head) {
         if (curr->prev->next != curr || curr->next->prev != curr) {
-            printf("%s is wrong\n", value_of(head, curr));
+            printf("%s is wrong\n", element_value_of(head, curr));
             flag = 0;
         }
         curr = curr->next;
@@ -171,6 +177,7 @@ int q_size(struct list_head *head)
     list_for_each (li, head)
         len++;
 
+
     return len;
 }
 
@@ -209,13 +216,14 @@ bool q_delete_dup(struct list_head *head)
     while (curr->next != head) {
         /* q_print_entry("curr", curr); */
         /* printf("! %s %s\n", valueOf(curr), valueOf(curr->next)); */
-        if (strcmp(value_of(head, curr), value_of(head, curr->next)) == 0) {
+        if (strcmp(element_value_of(head, curr),
+                   element_value_of(head, curr->next)) == 0) {
             element_t *e = list_entry(curr, element_t, list);
             curr = curr->next;
             struct list_head *next = NULL;
 
             while (curr != head &&
-                   strcmp(value_of(head, curr), e->value) == 0) {
+                   strcmp(element_value_of(head, curr), e->value) == 0) {
                 /* q_print_queue(head); */
                 /* q_print_entry("\tcurr", curr); */
                 /* printf("\tnext: %p\n", curr->next); */
@@ -422,12 +430,12 @@ int q_ascend_descend(struct list_head *head, bool ascend)
     struct list_head *curr = head->prev;
     int len = 0;
     /* because there are at least one element, so max must not be NULL */
-    const char *max = value_of(head, curr);
+    const char *max = element_value_of(head, curr);
 
     while (curr != head) {
-        int cmp = strcmp(max, value_of(head, curr));
+        int cmp = strcmp(max, element_value_of(head, curr));
         if (ascend ? cmp >= 0 : cmp <= 0) {
-            max = value_of(head, curr);
+            max = element_value_of(head, curr);
             len++;
             curr = curr->prev;
         } else {
@@ -456,10 +464,72 @@ int q_descend(struct list_head *head)
     return q_ascend_descend(head, false);
 }
 
+// merge L1 and L2 into L1
+void merge_two_list(struct list_head *L1, struct list_head *L2, bool descend)
+{
+    if (list_empty(L1)) {
+        L1->next = L2->next;
+        L1->prev = L2->prev;
+        INIT_LIST_HEAD(L2);
+    }
+    if (list_empty(L2))
+        return;
+
+    struct list_head *curr1 = L1->next, *curr2 = L2->next;
+    while (curr1 != L1 && curr2 != L2) {
+        int cmp =
+            strcmp(element_value_of(L1, curr1), element_value_of(L2, curr2));
+        if (descend ? cmp < 0 : cmp > 0) {
+            struct list_head *tmp = curr2->next;
+            list_del(curr2);
+            list_add_tail(curr2, curr1);
+            curr2 = tmp;
+        } else {
+            curr1 = curr1->next;
+        }
+    }
+    return;
+}
+
 /* Merge all the queues into one sorted queue, which is in ascending/descending
  * order */
 int q_merge(struct list_head *head, bool descend)
 {
     // https://leetcode.com/problems/merge-k-sorted-lists/
-    return 0;
+    if (!head || list_empty(head))
+        return 0;
+
+    queue_contex_t *first = list_entry(head->next, queue_contex_t, chain);
+    if (list_is_singular(head))
+        return first->size;
+
+    // print all queues for debug
+    /* int n = 0; */
+    /* queue_contex_t *curr_q; */
+    /* list_for_each_entry (curr_q, head, chain) { */
+    /*     n++; */
+    /*     printf("queue %d(%d): ", curr_q->id, curr_q->size); */
+    /*     element_t *item; */
+    /*     list_for_each_entry (item, curr_q->q, list) { */
+    /*         printf("%s ", item->value); */
+    /*     } */
+    /*     printf("\n"); */
+    /* } */
+    /* printf("%d queue\n", n); */
+
+    struct list_head *first_list =
+        list_entry(head->next, queue_contex_t, chain)->q;
+
+    for (struct list_head *curr_queue = head->next->next; curr_queue != head;
+         curr_queue = curr_queue->next) {
+        merge_two_list(first_list,
+                       list_entry(curr_queue, queue_contex_t, chain)->q,
+                       descend);
+        /* q_print_queue(first_list); */
+        /* hr(); */
+    }
+
+    /* printf("\n\nhi\n"); */
+
+    return q_size(first_list);
 }
