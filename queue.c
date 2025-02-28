@@ -46,19 +46,6 @@ void q_print_queue(struct list_head *head)
         curr = curr->next;
     } while (curr && curr != head);
     printf("\n");
-
-    // check if the doublely circular linked list is correct
-    int flag = 1;
-    curr = head->next;
-    while (curr != head) {
-        if (curr->prev->next != curr || curr->next->prev != curr) {
-            printf("%s is wrong\n", element_value_of(head, curr));
-            flag = 0;
-        }
-        curr = curr->next;
-    }
-    if (flag)
-        printf("the linked list is correct\n");
 }
 
 
@@ -475,6 +462,10 @@ void merge_two_list(struct list_head *L1, struct list_head *L2, bool descend)
     if (list_empty(L2))
         return;
 
+    /* printf("merge: \n"); */
+    /* q_print_queue(L1); */
+    /* q_print_queue(L2); */
+
     struct list_head *curr1 = L1->next, *curr2 = L2->next;
     while (curr1 != L1 && curr2 != L2) {
         int cmp =
@@ -488,7 +479,103 @@ void merge_two_list(struct list_head *L1, struct list_head *L2, bool descend)
             curr1 = curr1->next;
         }
     }
+
+    if (curr2 != L2) {
+        list_splice_tail(L2, L1);
+    }
+    INIT_LIST_HEAD(L2);
+
     return;
+}
+
+bool check_list(struct list_head *head)
+{
+    if (!head) {
+        printf("List head is NULL\n");
+        return false;
+    }
+
+    if (head->next == NULL || head->prev == NULL) {
+        printf("List is corrupted: head->next or head->prev is NULL\n");
+        return false;
+    }
+
+    if (head->next == head && head->prev == head) {
+        printf("List is empty. Element count: 0\n");
+        return true;
+    }
+
+    struct list_head *node = head->next;
+    int count = 0;
+
+    while (node != head) {
+        if (!node || !node->next || !node->prev) {
+            printf("List is corrupted at node %d: found NULL pointers\n",
+                   count + 1);
+            return false;
+        }
+
+        if (node->next->prev != node) {
+            printf(
+                "List is corrupted at node %d: next->prev does not point "
+                "back\n",
+                count + 1);
+            return false;
+        }
+
+        if (node->prev->next != node) {
+            printf(
+                "List is corrupted at node %d: prev->next does not point "
+                "forward\n",
+                count + 1);
+            return false;
+        }
+
+        count++;
+        node = node->next;
+
+        // 防止無窮迴圈（理論上不該發生，除非指標異常）
+        if (count > 1000000) {
+            printf("List check aborted: possible infinite loop detected\n");
+            return false;
+        }
+    }
+
+    printf("List is valid. Element count: %d\n", count);
+    return true;
+}
+
+bool check_queues(struct list_head *head)
+{
+    hr();
+    /* printf("  checking queues chain\n"); */
+    if (!check_list(head))
+        return false;
+    queue_contex_t *queue = NULL;
+    list_for_each_entry (queue, head, chain) {
+        /* printf("  checking queue %d\n", queue->id); */
+        if (!check_list(queue->q))
+            return false;
+    }
+    hr();
+    return true;
+}
+
+void print_queues(struct list_head *head)
+{
+    // print all queues for debug
+    int n = 0;
+    queue_contex_t *curr_q = NULL;
+    list_for_each_entry (curr_q, head, chain) {
+        n++;
+        printf("queue %d(%d): ", curr_q->id, curr_q->size);
+        element_t *item = NULL;
+        list_for_each_entry (item, curr_q->q, list) {
+            printf("%s ", item->value);
+        }
+        printf("\n");
+    }
+    printf("%d queue\n", n);
 }
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
@@ -503,19 +590,7 @@ int q_merge(struct list_head *head, bool descend)
     if (list_is_singular(head))
         return first->size;
 
-    // print all queues for debug
-    /* int n = 0; */
-    /* queue_contex_t *curr_q; */
-    /* list_for_each_entry (curr_q, head, chain) { */
-    /*     n++; */
-    /*     printf("queue %d(%d): ", curr_q->id, curr_q->size); */
-    /*     element_t *item; */
-    /*     list_for_each_entry (item, curr_q->q, list) { */
-    /*         printf("%s ", item->value); */
-    /*     } */
-    /*     printf("\n"); */
-    /* } */
-    /* printf("%d queue\n", n); */
+    /* print_queues(head); */
 
     struct list_head *first_list =
         list_entry(head->next, queue_contex_t, chain)->q;
@@ -525,6 +600,12 @@ int q_merge(struct list_head *head, bool descend)
         merge_two_list(first_list,
                        list_entry(curr_queue, queue_contex_t, chain)->q,
                        descend);
+
+        /* if (!check_queues(head)) */
+        /*     return -1; */
+
+        /* printf("printing queues\n\n"); */
+        /* print_queues(head); */
         /* q_print_queue(first_list); */
         /* hr(); */
     }
