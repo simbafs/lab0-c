@@ -6,6 +6,8 @@
 
 #include "queue.h"
 
+/* ==== Beginning of Helper Functions ====*/
+
 #define hr() printf("-----\n")
 
 const char *element_value_of(struct list_head *head, struct list_head *node)
@@ -140,6 +142,8 @@ bool check_queues(struct list_head *head)
     return true;
 }
 
+/* ==== Ending of Helper Functions ====*/
+
 /* Notice: sometimes, Cppcheck would find the potential NULL pointer bugs,
  * but some of them cannot occur. You can suppress them by adding the
  * following line.
@@ -179,9 +183,11 @@ element_t *new_element(char *s)
 
     INIT_LIST_HEAD(&e->list);
 
-    int len = strlen(s) + 1;
-    e->value = (char *) malloc(len);
-    strncpy(e->value, s, len);
+    e->value = strdup(s);
+    if (!e->value) {
+        free(e);
+        return NULL;
+    }
 
     return e;
 }
@@ -219,6 +225,7 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
     element_t *e = list_entry(head->next, element_t, list);
 
     strncpy(sp, e->value, bufsize);
+    sp[bufsize - 1] = '\0';
 
     list_del_init(head->next);
 
@@ -234,6 +241,7 @@ element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
     element_t *e = list_entry(head->prev, element_t, list);
 
     strncpy(sp, e->value, bufsize);
+    sp[bufsize - 1] = '\0';
 
     list_del_init(head->prev);
 
